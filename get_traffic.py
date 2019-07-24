@@ -22,21 +22,26 @@ class UserStats():
         print(f">>> Getting repo details of user {user.name} with GitHub url : {user.html_url} ...")
         repos = user.get_repos()
 
-        results = [None] * repos.totalCount
-        idx = 0
         threads = []
-        for repo in repos:
-            # Spawn a thread for each repo 
-            t = Thread(target=self.updateRepoStats, args=(repo,results,idx,))
+
+        # We're only able to retrieve repo statistics for those we can push to
+        repos = [repo for repo in repos if repo.permissions.push]
+        results = [None] * len(repos)
+
+        for idx, repo in enumerate(repos):
+            # Spawn a thread for each repo
+            t = Thread(target=self.updateRepoStats, args=(repo, results, idx,))
             t.start()
             threads.append(t)
-            idx += 1
 
         # Wait for all threads to execute
         while len(threads):
             threads = [t for t in threads if t.is_alive()]
 
-        df = pd.read_csv(f'{self.user_name}.csv') if os.path.exists(f'{self.user_name}.csv') else pd.DataFrame(columns=['Repo', 'Views', 'Stars', 'Watching', 'Forks', 'Clones'])
+        if os.path.exists(f'{self.user_name}.csv'):
+            df = pd.read_csv(f'{self.user_name}.csv')
+        else:
+            df = pd.DataFrame(columns=['Repo', 'Views', 'Stars', 'Watching', 'Forks', 'Clones'])
         changed = False
         # Evaluate all repo results and update output CSV accordingly
         for row in results:
