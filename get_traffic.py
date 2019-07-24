@@ -65,7 +65,7 @@ class UserStats():
 
     def updateRepoStats(self, repo, results, idx):
         row = [
-            repo.name, 
+            repo.full_name,
             repo.get_views_traffic()['count'], 
             repo.stargazers_count, 
             repo.watchers_count, 
